@@ -4,7 +4,29 @@ on:
   push:
 
 jobs:
-  build-and-expose:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances de dev
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Tests (pytest)
+        run: pytest -v
+
+  ngrok:
+    needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
