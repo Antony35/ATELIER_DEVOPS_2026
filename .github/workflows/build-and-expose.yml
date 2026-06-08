@@ -1,0 +1,40 @@
+name: build-and-expose
+
+on:
+  push:
+
+jobs:
+  build-and-expose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Construire l'image Docker
+        run: docker build -t flask-app .
+
+      - name: Lancer le conteneur Flask
+        run: docker run -d -p 5000:5000 --name flask flask-app
+
+      - name: Lancer le tunnel Ngrok
+        env:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+        run: docker run -d --network host --name ngrok-agent -e NGROK_AUTHTOKEN ngrok/ngrok http 5000
+
+      - name: Récupérer et afficher l'URL publique
+        run: |
+          for i in $(seq 1 10); do
+            URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+            if [ -n "$URL" ] && [ "$URL" != "null" ]; then break; fi
+            sleep 2
+          done
+          echo "URL publique : $URL"
+          echo "### 🔗 URL publique Ngrok : $URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Garder le tunnel ouvert ~120 s
+        run: sleep 120
+
+      - name: Arrêt propre
+        if: always()
+        run: docker stop flask ngrok-agent || true
