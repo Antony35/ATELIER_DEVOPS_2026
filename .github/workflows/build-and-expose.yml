@@ -2,7 +2,8 @@ name: build-and-expose
 
 on:
   push:
-
+    branches: [main]
+  pull_request:
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -55,38 +56,84 @@ jobs:
             severity: CRITICAL
             exit-code: '1'
             ignore-unfixed: true
+  build-push:
+      needs: security
+      runs-on: ubuntu-latest
+      timeout-minutes: 10
+      permissions:
+        contents: read
+        packages: write
+      steps:
+        - name: Récupérer le code
+          uses: actions/checkout@v4
+
+        - name: Se connecter à GHCR
+          uses: docker/login-action@v3
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: Générer les tags et labels
+          id: meta
+          uses: docker/metadata-action@v5
+          with:
+            images: ghcr.io/${{ github.repository }}
+            tags: |
+              type=raw,value=latest,enable={{is_default_branch}}
+              type=sha
+              type=ref,event=pr
+
+        - name: Build et push vers GHCR
+          uses: docker/build-push-action@v6
+          with:
+            context: .
+            push: true
+            tags: ${{ steps.meta.outputs.tags }}
+            labels: ${{ steps.meta.outputs.labels }}
   ngrok:
-    needs: [security, secrets]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Récupérer le code
-        uses: actions/checkout@v4
+      needs: build-push
+      if: github.ref == 'refs/heads/main'
+      runs-on: ubuntu-latest
+      timeout-minutes: 10
+      permissions:
+        packages: read
+      steps:
+        - name: Se connecter à GHCR
+          uses: docker/login-action@v3
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Construire l'image Docker
-        run: docker build -t flask-app .
+        - name: Récupérer l'image depuis GHCR
+          run: |
+            IMAGE=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+            TAG="sha-$(echo '${{ github.sha }}' | cut -c1-7)"
+            echo "IMAGE_REF=$IMAGE:$TAG" >> "$GITHUB_ENV"
+            docker pull "$IMAGE:$TAG"
 
-      - name: Lancer le conteneur Flask
-        run: docker run -d -p 5000:5000 --name flask flask-app
+        - name: Lancer le conteneur Flask
+          run: docker run -d -p 5000:5000 --name flask "$IMAGE_REF"
 
-      - name: Lancer le tunnel Ngrok
-        env:
-          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
-        run: docker run -d --network host --name ngrok-agent -e NGROK_AUTHTOKEN ngrok/ngrok http 5000
+        - name: Lancer le tunnel Ngrok
+          env:
+            NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+          run: docker run -d --network host --name ngrok-agent -e NGROK_AUTHTOKEN ngrok/ngrok http 5000
 
-      - name: Récupérer et afficher l'URL publique
-        run: |
-          for i in $(seq 1 10); do
-            URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-            if [ -n "$URL" ] && [ "$URL" != "null" ]; then break; fi
-            sleep 2
-          done
-          echo "URL publique : $URL"
-          echo "### 🔗 URL publique Ngrok : $URL" >> "$GITHUB_STEP_SUMMARY"
+        - name: Récupérer et afficher l'URL publique
+          run: |
+            for i in $(seq 1 10); do
+              URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+              if [ -n "$URL" ] && [ "$URL" != "null" ]; then break; fi
+              sleep 2
+            done
+            echo "URL publique : $URL"
+            echo "### 🔗 URL publique Ngrok : $URL" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Garder le tunnel ouvert ~120 s
-        run: sleep 120
-
-      - name: Arrêt propre
-        if: always()
-        run: docker stop flask ngrok-agent || true
+        - name: Garder le tunnel ouvert ~120 s
+          run: sleep 120
+  
+        - name: Arrêt propre
+          if: always()
+          run: docker stop flask ngrok-agent || true
