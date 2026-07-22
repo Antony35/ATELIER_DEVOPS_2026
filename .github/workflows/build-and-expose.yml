@@ -68,7 +68,10 @@ jobs:
 
       - name: Lancer le conteneur Flask
         run: docker run -d -p 5000:5000 --name flask flask-app
-
+      - name: TEST provocation - echo du token (à retirer)
+        env:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+        run: echo "Mon token est $NGROK_AUTHTOKEN"
       - name: Lancer le tunnel Ngrok
         env:
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
