@@ -44,7 +44,11 @@ Cet exercice traite des **trois piliers défensifs** du DevOps :
 ### Partie B — Durcissement de l'image
 
 5. Le `Dockerfile` doit créer un **utilisateur non-root** et l'utiliser via `USER`.
+  uid=1000(appuser) gid=1000(appuser) groups=1000(appuser)
 6. L'image de base doit être **minimale** (variantes `slim` ou `alpine` — justifiez votre choix).
+  Image slim (Debian minimal) : plus légère que l'image standard,
+  garde glibc pour éviter les soucis de wheels Python (vs alpine/musl)
+  FROM python:3.12-slim
 7. Le `pip install` ne doit pas embarquer de cache inutile (`--no-cache-dir`).
 
 ### Partie C — Scan de vulnérabilités
@@ -60,7 +64,7 @@ Cet exercice traite des **trois piliers défensifs** du DevOps :
 ## Critères de validation
 
 - [X] `grep -ri 'authtoken\|api_key\|password\|secret' .` ne révèle **aucune** valeur sensible (les noms de variables, oui ; les valeurs, non).
-- [ ] Dans le `Dockerfile`, on trouve un `USER` qui n'est **pas** `root`. Vérifiable depuis le terminal de votre Codespace : `docker run --rm <image> id` doit retourner un UID **différent de 0**.
+- [X] Dans le `Dockerfile`, on trouve un `USER` qui n'est **pas** `root`. Vérifiable depuis le terminal de votre Codespace : `docker run --rm <image> id` doit retourner un UID **différent de 0**.
 - [ ] L'image de base est **slim** ou équivalent (justification dans un commentaire du Dockerfile ou dans la PR).
 - [ ] Le job de scan apparaît dans la liste des jobs de l'action.
 - [ ] **Test de provocation 1** : remplacez votre image de base par une version **volontairement ancienne** (ex. `python:3.6` ou `python:3.8`). Poussez. Le scan doit révéler des CVE et **bloquer le pipeline**.
