@@ -24,6 +24,19 @@ jobs:
 
       - name: Tests (pytest)
         run: pytest -v
+  secrets:
+      runs-on: ubuntu-latest
+      timeout-minutes: 5
+      steps:
+        - name: Récupérer le code (avec tout l'historique)
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+
+        - name: Scan de secrets (gitleaks)
+          uses: gitleaks/gitleaks-action@v2
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   ngrok:
     needs: quality

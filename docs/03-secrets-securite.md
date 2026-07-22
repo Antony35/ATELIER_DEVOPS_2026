@@ -59,7 +59,7 @@ Cet exercice traite des **trois piliers défensifs** du DevOps :
 
 ## Critères de validation
 
-- [ ] `grep -ri 'authtoken\|api_key\|password\|secret' .` ne révèle **aucune** valeur sensible (les noms de variables, oui ; les valeurs, non).
+- [X] `grep -ri 'authtoken\|api_key\|password\|secret' .` ne révèle **aucune** valeur sensible (les noms de variables, oui ; les valeurs, non).
 - [ ] Dans le `Dockerfile`, on trouve un `USER` qui n'est **pas** `root`. Vérifiable depuis le terminal de votre Codespace : `docker run --rm <image> id` doit retourner un UID **différent de 0**.
 - [ ] L'image de base est **slim** ou équivalent (justification dans un commentaire du Dockerfile ou dans la PR).
 - [ ] Le job de scan apparaît dans la liste des jobs de l'action.
