@@ -65,11 +65,11 @@ Cet exercice traite des **trois piliers défensifs** du DevOps :
 
 - [X] `grep -ri 'authtoken\|api_key\|password\|secret' .` ne révèle **aucune** valeur sensible (les noms de variables, oui ; les valeurs, non).
 - [X] Dans le `Dockerfile`, on trouve un `USER` qui n'est **pas** `root`. Vérifiable depuis le terminal de votre Codespace : `docker run --rm <image> id` doit retourner un UID **différent de 0**.
-- [ ] L'image de base est **slim** ou équivalent (justification dans un commentaire du Dockerfile ou dans la PR).
-- [ ] Le job de scan apparaît dans la liste des jobs de l'action.
-- [ ] **Test de provocation 1** : remplacez votre image de base par une version **volontairement ancienne** (ex. `python:3.6` ou `python:3.8`). Poussez. Le scan doit révéler des CVE et **bloquer le pipeline**.
-- [ ] **Test de provocation 2** : essayez d'`echo` votre token Ngrok dans une étape (`echo "$NGROK_AUTHTOKEN"`). Vérifiez que GitHub le **masque automatiquement** en `***`. (Pensez à retirer ce echo après le test !)
-- [ ] La chaîne `quality → security → ngrok` est visible sur le graphe de l'action.
+- [X] L'image de base est **slim** ou équivalent (justification dans un commentaire du Dockerfile ou dans la PR).
+- [X] Le job de scan apparaît dans la liste des jobs de l'action.
+- [X] **Test de provocation 1** : remplacez votre image de base par une version **volontairement ancienne** (ex. `python:3.6` ou `python:3.8`). Poussez. Le scan doit révéler des CVE et **bloquer le pipeline**.
+- [X] **Test de provocation 2** : essayez d'`echo` votre token Ngrok dans une étape (`echo "$NGROK_AUTHTOKEN"`). Vérifiez que GitHub le **masque automatiquement** en `***`. (Pensez à retirer ce echo après le test !)
+- [X] La chaîne `quality → security → ngrok` est visible sur le graphe de l'action.
 
 ---
 
