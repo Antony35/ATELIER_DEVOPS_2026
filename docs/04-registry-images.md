@@ -45,12 +45,33 @@ C'est le rôle d'un **registry d'images** — un dépôt versionné pour vos `Do
 
 ## Critères de validation
 
-- [ ] Sur votre dépôt GitHub, **onglet Code → section Packages** (à droite) : votre image apparaît.
-- [ ] Plusieurs tags sont listés : au moins `latest` + un `sha-…`.
-- [ ] Une commande `docker pull ghcr.io/<user>/<repo>:latest` depuis n'importe quelle machine connectée fonctionne (l'image est publique ou les droits sont OK).
-- [ ] Le job `ngrok` du workflow contient un `docker pull` mais pas de `docker build`.
-- [ ] **Test de provocation** : ouvrez une PR depuis une branche. Sur la page *Packages*, un tag `pr-<numéro>` doit apparaître. Quand la PR est fermée/mergée, ce tag peut subsister (c'est OK) mais `latest` doit pointer sur le nouveau commit de `main`.
-- [ ] La chaîne complète d'exécution est : `quality → security → build-push → ngrok`. Visible sur le graphe de l'action.
+- [X] Sur votre dépôt GitHub, **onglet Code → section Packages** (à droite) : votre image apparaît.
+- [X] Plusieurs tags sont listés : au moins `latest` + un `sha-…`.
+- [X] Une commande `docker pull ghcr.io/<user>/<repo>:latest` depuis n'importe quelle machine connectée fonctionne (l'image est publique ou les droits sont OK).
+- [X] Le job `ngrok` du workflow contient un `docker pull` mais pas de `docker build`.
+- [X] **Test de provocation** : ouvrez une PR depuis une branche. Sur la page *Packages*, un tag `pr-<numéro>` doit apparaître. Quand la PR est fermée/mergée, ce tag peut subsister (c'est OK) mais `latest` doit pointer sur le nouveau commit de `main`.
+- [X] La chaîne complète d'exécution est : `quality → security → build-push → ngrok`. Visible sur le graphe de l'action.
+
+  ## Récupérer l'image publiée
+
+  L'image de cette application est construite et publiée automatiquement sur
+  **GHCR** (GitHub Container Registry) à chaque push sur `main`.
+
+  Pour la récupérer et la lancer :
+
+      docker pull ghcr.io/antony35/atelier_devops_2026:latest
+      docker run -d -p 5000:5000 ghcr.io/antony35/atelier_devops_2026:latest
+
+  L'application est ensuite accessible sur http://localhost:5000
+
+  ### Stratégie de tags
+
+  | Tag | Signification |
+  |---|---|
+  | `latest` | Dernière version stable (dernier push sur `main`) |
+  | `sha-<commit>` | Version immuable liée à un commit précis |
+  | `pr-<numéro>` | Version « preview » construite pour une Pull Request |
+
 
 ---
 
