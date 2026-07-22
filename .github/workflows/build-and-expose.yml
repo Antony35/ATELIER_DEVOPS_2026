@@ -37,9 +37,26 @@ jobs:
           uses: gitleaks/gitleaks-action@v2
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  security:
+      needs: quality
+      runs-on: ubuntu-latest
+      timeout-minutes: 10
+      steps:
+        - name: Récupérer le code
+          uses: actions/checkout@v4
 
+        - name: Construire l'image Docker
+          run: docker build -t flask-app .
+
+        - name: Scan de vulnérabilités (Trivy)
+          uses: aquasecurity/trivy-action@master
+          with:
+            image-ref: flask-app
+            severity: CRITICAL
+            exit-code: '1'
+            ignore-unfixed: true
   ngrok:
-    needs: quality
+    needs: [security, secrets]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
